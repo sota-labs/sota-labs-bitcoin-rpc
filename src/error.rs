@@ -29,7 +29,7 @@ pub enum Error {
     /// The bitcoin failed.
     #[error(transparent)]
     BitcoinCoreRpcError(#[from] BitcoinCoreRpcError),
-    /// The bitcoin failed.
+    /// The url failed.
     #[error(transparent)]
     UrlParseError(#[from] ParseError),
 }
