@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use bitcoin_private::hex::exts::DisplayHex;
 use bitcoincore_rpc::{Auth, JsonOutPoint, RawTx};
 use bitcoincore_rpc_json as json;
 use json::bitcoin::{
@@ -7,7 +8,7 @@ use json::bitcoin::{
     address::{NetworkChecked, NetworkUnchecked},
     consensus::{Decodable, ReadExt},
     ecdsa::Signature,
-    hex::{DisplayHex, FromHex, HexToBytesIter},
+    hashes::hex::{FromHex, HexIterator},
     Address, Amount, Block, OutPoint, PrivateKey, PublicKey, Script, Transaction,
 };
 use serde::{Deserialize, Serialize};
@@ -1410,7 +1411,7 @@ fn opt_result<T: for<'a> serde::de::Deserialize<'a>>(
 }
 
 fn deserialize_hex<T: Decodable>(hex: &str) -> Result<T> {
-    let mut reader = HexToBytesIter::new(hex).map_err(bitcoincore_rpc::Error::from)?;
+    let mut reader = HexIterator::new(hex).map_err(bitcoincore_rpc::Error::from)?;
     let object = Decodable::consensus_decode(&mut reader).map_err(bitcoincore_rpc::Error::from)?;
     if reader.read_u8().is_ok() {
         Err(Error::BitcoinCoreRpcError(
