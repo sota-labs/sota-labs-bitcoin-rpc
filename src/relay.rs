@@ -59,7 +59,7 @@ impl Relay {
                     Err(Error::ClientError { text })
                 } else {
                     // Internal server error (500-599)
-                    Err(Error::RequestError(err))
+                    Err(Error::ServerError { text })
                 }
             }
             Ok(_) => {
