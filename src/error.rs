@@ -17,6 +17,9 @@ pub enum Error {
     /// The request parameters were invalid.
     #[error("Client error: {text}")]
     ClientError { text: String },
+    /// The server's error.
+    #[error("Server error: {text}")]
+    ServerError { text: String },
     /// The request could not be serialized.
     #[error(transparent)]
     RequestSerdeJson(#[from] serde_json::Error),
