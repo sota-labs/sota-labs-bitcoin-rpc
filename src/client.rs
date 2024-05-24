@@ -5,9 +5,9 @@ use bitcoincore_rpc_json as json;
 use json::bitcoin::{
     self,
     address::{NetworkChecked, NetworkUnchecked},
-    consensus::{Decodable, ReadExt},
+    consensus::encode,
     ecdsa::Signature,
-    hex::{DisplayHex, FromHex, HexToBytesIter},
+    hex::{DisplayHex, FromHex},
     Address, Amount, Block, OutPoint, PrivateKey, PublicKey, Script, Transaction,
 };
 use serde::{Deserialize, Serialize};
@@ -159,7 +159,7 @@ impl Client {
 
     pub async fn get_block(&self, hash: &bitcoin::BlockHash) -> Result<Block> {
         let hex: String = self.call("getblock", &[into_json(hash)?, 0.into()]).await?;
-        deserialize_hex(&hex)
+        Ok(encode::deserialize_hex(&hex).map_err(bitcoincore_rpc::Error::from)?)
     }
 
     pub async fn get_block_hex(&self, hash: &bitcoin::BlockHash) -> Result<String> {
@@ -178,7 +178,7 @@ impl Client {
         let hex: String = self
             .call("getblockheader", &[into_json(hash)?, false.into()])
             .await?;
-        deserialize_hex(&hex)
+        Ok(encode::deserialize_hex(&hex).map_err(bitcoincore_rpc::Error::from)?)
     }
 
     pub async fn get_block_header_info(
@@ -331,7 +331,7 @@ impl Client {
         let hex: String = self
             .call("getrawtransaction", handle_defaults(&mut args, &[null()]))
             .await?;
-        deserialize_hex(&hex)
+        Ok(encode::deserialize_hex(&hex).map_err(bitcoincore_rpc::Error::from)?)
     }
 
     pub async fn get_raw_transaction_hex(
@@ -726,7 +726,7 @@ impl Client {
         let hex: String = self
             .create_raw_transaction_hex(utxos, outs, locktime, replaceable)
             .await?;
-        deserialize_hex(&hex)
+        Ok(encode::deserialize_hex(&hex).map_err(bitcoincore_rpc::Error::from)?)
     }
 
     pub async fn decode_raw_transaction<R: RawTx>(
@@ -1406,22 +1406,6 @@ fn opt_result<T: for<'a> serde::de::Deserialize<'a>>(
         Ok(None)
     } else {
         Ok(serde_json::from_value(result)?)
-    }
-}
-
-fn deserialize_hex<T: Decodable>(hex: &str) -> Result<T> {
-    let mut reader = HexToBytesIter::new(hex).map_err(bitcoincore_rpc::Error::from)?;
-    let object = Decodable::consensus_decode(&mut reader).map_err(bitcoincore_rpc::Error::from)?;
-    if reader.read_u8().is_ok() {
-        Err(Error::BitcoinCoreRpcError(
-            bitcoincore_rpc::Error::BitcoinSerialization(
-                bitcoin::consensus::encode::Error::ParseFailed(
-                    "data not consumed entirely when explicitly deserializing",
-                ),
-            ),
-        ))
-    } else {
-        Ok(object)
     }
 }
 
