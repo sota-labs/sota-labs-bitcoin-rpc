@@ -17,4 +17,4 @@ thiserror = { version = "1.0", default-features = false }
 url = { version = "2.5" }
 
 [dev-dependencies]
-tempfile = "3.3.0"
+tempfile = "3.11.0"
